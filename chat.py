@@ -16,16 +16,6 @@ st.set_page_config(
     page_icon="🤖",
 )
 
-# Hide Streamlit menu and header
-hide_st_style = """
-<style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-</style>
-"""
-st.markdown(hide_st_style, unsafe_allow_html=True)
-
 # Define functions to interact with the JSON file
 def load_settings():
     try:
