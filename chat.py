@@ -85,6 +85,16 @@ if "cumulative_cost" not in st.session_state:
 st.title("GalaiGPT")
 st.write("Your Personal AI Marketing Assistant, Always Ready to Help 🚀")
 
+# Check if the introduction has been sent
+if "introduced" not in st.session_state:
+    st.session_state.introduced = False
+
+# Send the introduction message if not introduced
+if not st.session_state.introduced:
+    introduction_message = prompts.get_introduction_prompt()  # Get the introduction prompt from prompts.py
+    st.session_state.messages.append({"role": "assistant", "content": introduction_message})
+    st.session_state.introduced = True
+
 # Set the API key if provided
 if api_key:
     openai.api_key = api_key
