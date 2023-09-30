@@ -8,9 +8,17 @@ import tokens_count
 import os
 
 st.set_page_config(
-    page_title="GalaiGPT",
+    page_title="GalaiGPT | BETA",
     page_icon="🤖",
 )
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # Define functions to interact with the JSON file
 def load_settings():
