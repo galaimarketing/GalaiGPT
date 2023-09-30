@@ -1,12 +1,7 @@
 import openai
 import streamlit as st
 import json
-from selenium import webdriver
-from selenium_stealth import stealth
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse
 import requests
-import os
 import prompts
 import tokens_count
 
@@ -170,67 +165,67 @@ if prompt := st.chat_input("Let's talk?"):
                 {"role": "assistant", "content": new_written_text}
             )
 
-   elif prompt.strip().lower().startswith("/google"):
-    # Handle /google command
-    parts = prompt.split(" ", 1)
-    if len(parts) > 1:
-        input_query = parts[1].strip()
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            message_placeholder.markdown(
-                "Searching Google For: " + input_query + " ..."
-            )
-            search_results = prompts.search_google_web_automation(input_query)
-            over_all_summary = ""
+    elif prompt.strip().lower().startswith("/google"):
+        # Handle /google command
+        parts = prompt.split(" ", 1)
+        if len(parts) > 1:
+            input_query = parts[1].strip()
+            with st.chat_message("assistant"):
+                message_placeholder = st.empty()
+                message_placeholder.markdown(
+                    "Searching Google For: " + input_query + " ..."
+                )
+                search_results = prompts.search_google_web_automation(input_query)
+                over_all_summary = ""
 
-            source_links = "\n \n Sources: \n \n"
+                source_links = "\n \n Sources: \n \n"
 
-            for result in search_results:
-                blog_url = result["url"]
-                source_links += blog_url + "\n \n"
-                message_placeholder.markdown(f"Search Done, Reading {blog_url}")
-                blog_summary_prompt = prompts.blog_summary_prompt(blog_url)
+                for result in search_results:
+                    blog_url = result["url"]
+                    source_links += blog_url + "\n \n"
+                    message_placeholder.markdown(f"Search Done, Reading {blog_url}")
+                    blog_summary_prompt = prompts.blog_summary_prompt(blog_url)
+                    response_obj = openai.ChatCompletion.create(
+                        model=model,
+                        messages=[{"role": "user", "content": blog_summary_prompt}],
+                        temperature=temperature,
+                        top_p=top_p,
+                        stream=True,
+                    )
+
+                    blog_summary = ""
+                    for response in response_obj:
+                        blog_summary += response.choices[0].delta.get("content", "")
+
+                    over_all_summary = over_all_summary + blog_summary
+                    start_prompt_used = blog_summary_prompt + blog_summary
+
+                message_placeholder.markdown(f"Generating Final Search Report...")
+
+                new_search_prompt = prompts.google_search_prompt(over_all_summary)
+
                 response_obj = openai.ChatCompletion.create(
                     model=model,
-                    messages=[{"role": "user", "content": blog_summary_prompt}],
+                    messages=[{"role": "user", "content": new_search_prompt}],
                     temperature=temperature,
                     top_p=top_p,
                     stream=True,
                 )
-
-                blog_summary = ""
+                research_final = ""
                 for response in response_obj:
-                    blog_summary += response.choices[0].delta.get("content", "")
+                    research_final += response.choices[0].delta.get("content", "")
+                    message_placeholder.markdown(research_final + "▌")
 
-                over_all_summary = over_all_summary + blog_summary
-                start_prompt_used = blog_summary_prompt + blog_summary
+                start_prompt_used = start_prompt_used + new_search_prompt + research_final
 
-            message_placeholder.markdown(f"Generating Final Search Report...")
-
-            new_search_prompt = prompts.google_search_prompt(over_all_summary)
-
-            response_obj = openai.ChatCompletion.create(
-                model=model,
-                messages=[{"role": "user", "content": new_search_prompt}],
-                temperature=temperature,
-                top_p=top_p,
-                stream=True,
-            )
-            research_final = ""
-            for response in response_obj:
-                research_final += response.choices[0].delta.get("content", "")
-                message_placeholder.markdown(research_final + "▌")
-
-            start_prompt_used = start_prompt_used + new_search_prompt + research_final
-
-            message_placeholder.markdown(research_final + source_links)
-            st.session_state.messages.append(
-                {"role": "assistant", "content": research_final + source_links}
-            )
-    else:
-        # Handle the case where there is no query after /google
-        with st.chat_message("assistant"):
-            st.markdown("Please provide a query after the /google command.")
+                message_placeholder.markdown(research_final + source_links)
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": research_final + source_links}
+                )
+        else:
+            # Handle the case where there is no query after /google
+            with st.chat_message("assistant"):
+                st.markdown("Please provide a query after the /google command.")
 
     if show_token_cost:
         total_tokens_used = tokens_count.count_tokens(start_prompt_used, model)
