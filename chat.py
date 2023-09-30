@@ -72,7 +72,7 @@ if "cumulative_tokens" not in st.session_state:
 if "cumulative_cost" not in st.session_state:
     st.session_state.cumulative_cost = 0
 
-st.title("GalaiGPT")
+st.title("GalaiGPT 🤖")
 st.write("Your Personal AI Marketing Assistant, Always Ready to Help 🚀")
 
 # Set the API key if it's provided
