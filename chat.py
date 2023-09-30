@@ -1,20 +1,13 @@
 import openai
 import streamlit as st
 import json
-import requests
-from langchain.text_splitter import TokenTextSplitter
-from newspaper import Article
-from selenium import webdriver
-from selenium_stealth import stealth
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse
-import tiktoken
+import google_serp
 import prompts
 import blog_posts
-import google_serp
 import tokens_count
+import os
 
-# Set Streamlit page configuration
+# Streamlit configuration
 st.set_page_config(
     page_title="GalaiGPT",
     page_icon="🤖",
@@ -28,7 +21,7 @@ hide_st_style = """
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
-# Load and save settings functions
+# Functions to interact with the JSON file for settings
 def load_settings():
     try:
         with open("settings.json", "r") as file:
@@ -81,21 +74,11 @@ if "cumulative_tokens" not in st.session_state:
 if "cumulative_cost" not in st.session_state:
     st.session_state.cumulative_cost = 0
 
-# Set the title and introduction
+# Streamlit app title and introduction
 st.title("GalaiGPT")
 st.write("Your Personal AI Marketing Assistant, Always Ready to Help 🚀")
 
-# Check if the introduction has been sent
-if "introduced" not in st.session_state:
-    st.session_state.introduced = False
-
-# Send the introduction message if not introduced
-if not st.session_state.introduced:
-    introduction_message = prompts.get_introduction_prompt()  # Get the introduction prompt from prompts.py
-    st.session_state.messages.append({"role": "assistant", "content": introduction_message})
-    st.session_state.introduced = True
-
-# Set the API key if provided
+# Set the API key if it's provided
 if api_key:
     openai.api_key = api_key
 else:
@@ -106,11 +89,10 @@ else:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Check if the introduction has been sent
+# Introduction message
 if "introduced" not in st.session_state:
     st.session_state.introduced = False
 
-# Send the introduction message if not introduced
 if not st.session_state.introduced:
     introduction_message = prompts.introduction_prompt
     st.session_state.messages.append({"role": "assistant", "content": introduction_message})
@@ -120,8 +102,8 @@ if not st.session_state.introduced:
 if prompt := st.chat_input("Let's talk?"):
     start_prompt_used = ""
 
-    # Check for "/reset" command
     if prompt.strip().lower() == "/reset":
+        # Handle /reset command
         st.session_state.messages = []  # Clear the conversation
         st.session_state.cumulative_tokens = 0  # Reset cumulative tokens
         st.session_state.cumulative_cost = 0  # Reset cumulative cost
@@ -129,12 +111,11 @@ if prompt := st.chat_input("Let's talk?"):
             f"**Total Tokens Used This Session:** {st.session_state.cumulative_tokens}"
         )
         st.sidebar.markdown(
-            f"**Total Cost This Session:** ${st.session_state.cumulative_cost:.2f}"
+            f"**Total Cost This Session:** ${st.session_state.cumulative_cost:.6f}"
         )
         st.write("Conversation and counters have been reset!")
-        st.stop()  # Halts further execution for this run of the app
+        st.stop()
 
-    # Handle other user commands (e.g., /summarize, /rewrite, /google)
     elif prompt.strip().lower().startswith("/summarize"):
         # Handle /summarize command
         blog_url = prompt.split(" ", 1)[1].strip()
@@ -156,7 +137,7 @@ if prompt := st.chat_input("Let's talk?"):
 
             start_prompt_used = blog_summary_prompt + blog_summary
 
-            message_placeholder.markdown(blog_summary)  # Display the summary in chat
+            message_placeholder.markdown(blog_summary)
             st.session_state.messages.append(
                 {"role": "assistant", "content": blog_summary}
             )
