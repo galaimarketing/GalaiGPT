@@ -59,3 +59,5 @@ pandas==2.1.1
 pexpect==4.8.0
 Pillow==10.0.0
 selenium==4.13.0
+selenium-stealth==1.0.8
+
