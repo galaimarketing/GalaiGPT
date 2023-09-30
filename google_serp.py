@@ -13,7 +13,7 @@ def search_google_web_automation(query):
     options.add_experimental_option("useAutomationExtension", False)
     options.add_argument("--no-sandbox")  # Add this line for Linux compatibility
     options.add_argument("--disable-dev-shm-usage")  # Add this line for Linux compatibility
-    driver = webdriver.Chrome(options=options, executable_path='/path/to/chromedriver')  # Specify the path to chromedriver
+    driver = webdriver.Chrome(options=options, executable_path='/workspaces/galaigpt/chromedriver')  # Specify the path to chromedriver
 
     stealth(
         driver,
