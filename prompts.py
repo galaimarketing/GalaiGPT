@@ -1,3 +1,5 @@
+import requests
+
 # Introduction Prompt
 introduction_prompt = """\
 Welcome to GalaiGPT, your personal marketing assistant 🚀! I'm here to assist you with a wide range of marketing tasks. Whether it's crafting compelling content, answering marketing questions, summarizing articles, or any other marketing-related task, I've got you covered.
@@ -10,7 +12,7 @@ Just let me know what you need, and here are some of the tasks I can help you wi
 
 Feel free to start the conversation and tell me what marketing challenge you're facing or how I can assist you today!
 
-I'm made by Galai Ala 👩‍💻: [https://galaiala.web.app]
+I'm made by Galai Ala 👦‍💻: [https://galaiala.web.app]
 """
 
 # Blog Bullet Summary Prompt
@@ -54,3 +56,39 @@ Input for Your Marketing Research: {input}
 
 Let's dive into the marketing world together and uncover valuable insights!
 """
+
+# Function to perform Google web search and retrieve results
+def search_google_web_automation(input_query):
+    # Define the Google search URL
+    google_url = "https://www.google.com/search"
+
+    # Set the search query parameters
+    params = {"q": input_query}
+
+    try:
+        # Send a GET request to Google with the query
+        response = requests.get(google_url, params=params)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            # Parse the HTML content of the search results page
+            search_results = parse_search_results(response.text)
+            
+            # Return the search results (you need to implement parse_search_results)
+            return search_results
+        else:
+            # Handle errors if the request was not successful
+            print("Error: Unable to retrieve search results")
+            return []
+    except Exception as e:
+        # Handle exceptions, e.g., network errors
+        print(f"An error occurred: {str(e)}")
+        return []
+
+# Implement a function to parse the HTML search results page
+def parse_search_results(html_content):
+    # Your code to parse the HTML and extract search results
+    # ...
+
+    # Return the search results (a list of results)
+    return search_results
