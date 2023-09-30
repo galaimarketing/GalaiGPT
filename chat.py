@@ -8,18 +8,22 @@ from urllib.parse import urlparse
 import requests
 import os
 import prompts
+import tokens_count
 
+# Set Streamlit page configuration
 st.set_page_config(
     page_title="GalaiGPT | BETA",
     page_icon="🤖",
 )
+
+# Hide Streamlit menu and header
 hide_st_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            </style>
-            """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
+"""
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # Define functions to interact with the JSON file
@@ -69,34 +73,38 @@ settings.update(
 )
 save_settings(settings)
 
+# Initialize cumulative tokens and cost
 if "cumulative_tokens" not in st.session_state:
     st.session_state.cumulative_tokens = 0
 if "cumulative_cost" not in st.session_state:
     st.session_state.cumulative_cost = 0
 
+# Main title and description
 st.title("GalaiGPT 🤖")
 st.write("Your Personal AI Marketing Assistant, Always Ready to Help 🚀")
 
-# Set the API key if it's provided
+# Set the OpenAI API key if it's provided
 if api_key:
     openai.api_key = api_key
 else:
     st.warning("Please provide a valid Secret Key.")
     st.stop()
 
+# Initialize messages
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Display existing messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Initialize a boolean variable to track whether the introduction has been sent
+# Initialize introduction
 if "introduced" not in st.session_state:
     st.session_state.introduced = False
 
+# Send the introduction message when the chatbot is first used
 if not st.session_state.introduced:
-    # Send the introduction message when the chatbot is first used
     introduction_message = prompts.introduction_prompt
     st.session_state.messages.append({"role": "assistant", "content": introduction_message})
     st.session_state.introduced = True
@@ -126,7 +134,7 @@ if prompt := st.chat_input("Let's talk?"):
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             message_placeholder.markdown("Summarizing: " + blog_url)
-            blog_summary_prompt = blog_posts.get_blog_summary_prompt(blog_url)
+            blog_summary_prompt = prompts.blog_summary_prompt(blog_url)
             response_obj = openai.ChatCompletion.create(
                 model=model,
                 messages=[{"role": "user", "content": blog_summary_prompt}],
@@ -152,7 +160,7 @@ if prompt := st.chat_input("Let's talk?"):
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             message_placeholder.markdown("Rewriting...")
-            rewrite_prompt = prompts.rewrite_prompt.format(text=input_text)
+            rewrite_prompt = prompts.rewrite_prompt(input_text)
             response_obj = openai.ChatCompletion.create(
                 model=model,
                 messages=[{"role": "user", "content": rewrite_prompt}],
@@ -180,7 +188,7 @@ if prompt := st.chat_input("Let's talk?"):
             message_placeholder.markdown(
                 "Searching Google For: " + input_query + " ..."
             )
-            search_results = google_serp.search_google_web_automation(input_query)
+            search_results = prompts.search_google_web_automation(input_query)
             over_all_summary = ""
 
             source_links = "\n \n Sources: \n \n"
@@ -189,7 +197,7 @@ if prompt := st.chat_input("Let's talk?"):
                 blog_url = result["url"]
                 source_links += blog_url + "\n \n"
                 message_placeholder.markdown(f"Search Done, Reading {blog_url}")
-                blog_summary_prompt = blog_posts.get_blog_summary_prompt(blog_url)
+                blog_summary_prompt = prompts.blog_summary_prompt(blog_url)
                 response_obj = openai.ChatCompletion.create(
                     model=model,
                     messages=[{"role": "user", "content": blog_summary_prompt}],
@@ -207,9 +215,7 @@ if prompt := st.chat_input("Let's talk?"):
 
             message_placeholder.markdown(f"Generating Final Search Report...")
 
-            new_search_prompt = prompts.google_search_prompt.format(
-                input=over_all_summary
-            )
+            new_search_prompt = prompts.google_search_prompt(over_all_summary)
 
             response_obj = openai.ChatCompletion.create(
                 model=model,
