@@ -1,4 +1,3 @@
-# prototype
 import openai
 import streamlit as st
 import json
@@ -10,19 +9,8 @@ import os
 
 st.set_page_config(
     page_title="GalaiGPT",
-    page_icon="🤖", 
+    page_icon="🤖",
 )
-
-
-def log_to_file(log_message, filename="log.txt"):
-    # Get the current directory
-    current_directory = os.path.dirname(os.path.abspath(__file__))
- 
-    # Create or open the log file in append mode
-    log_file_path = os.path.join(current_directory, filename)
-    with open(log_file_path, "a") as log_file:
-        log_file.write(log_message + "\n")
-
 
 # Define functions to interact with the JSON file
 def load_settings():
@@ -32,12 +20,9 @@ def load_settings():
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
-
 def save_settings(settings):
     with open("settings.json", "w") as file:
         json.dump(settings, file, indent=4)
-
-
 
 # Load settings or use default values if not found
 settings = load_settings()
@@ -53,7 +38,7 @@ st.sidebar.header("Settings")
 
 show_token_cost = True
 
-api_key = st.sidebar.text_input("Your Secret Key", api_key_default)
+api_key = st.sidebar.text_input("Secret Key", api_key_default)
 temperature = st.sidebar.slider("Temperature", 0.1, 1.0, temperature_default)
 top_p = st.sidebar.slider("Top P", 0.1, 1.0, top_p_default)
 model = st.sidebar.selectbox(
@@ -74,16 +59,13 @@ settings.update(
 )
 save_settings(settings)
 
-
 if "cumulative_tokens" not in st.session_state:
     st.session_state.cumulative_tokens = 0
 if "cumulative_cost" not in st.session_state:
     st.session_state.cumulative_cost = 0
 
-
 st.title("GalaiGPT")
-st.write("Your Personal AI Companion, Always Ready to Assist 🚀")
-
+st.write("Your Personal AI Marketing Assistant, Always Ready to Help 🚀")
 
 # Set the API key if it's provided
 if api_key:
@@ -92,7 +74,6 @@ else:
     st.warning("Please provide a valid Secret Key.")
     st.stop()
 
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -100,11 +81,21 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+# Initialize a boolean variable to track whether the introduction has been sent
+if "introduced" not in st.session_state:
+    st.session_state.introduced = False
 
-if prompt := st.chat_input("What is up?"):
+if not st.session_state.introduced:
+    # Send the introduction message when the chatbot is first used
+    introduction_message = prompts.introduction_prompt
+    st.session_state.messages.append({"role": "assistant", "content": introduction_message})
+    st.session_state.introduced = True
+
+# Handle user input
+if prompt := st.chat_input("Let's talk?"):
     start_prompt_used = ""
 
-    # Check for "reset" command from user
+    # Check for "/reset" command from the user
     if prompt.strip().lower() == "/reset":
         st.session_state.messages = []  # Clear the conversation
         st.session_state.cumulative_tokens = 0  # Reset cumulative tokens
@@ -118,7 +109,9 @@ if prompt := st.chat_input("What is up?"):
         st.write("Conversation and counters have been reset!")
         st.stop()  # Halts further execution for this run of the app
 
-    if prompt.strip().lower().startswith("/summarize"):
+    # Handle other user commands (e.g., /summarize, /rewrite, /google)
+    elif prompt.strip().lower().startswith("/summarize"):
+        # Handle /summarize command
         blog_url = prompt.split(" ", 1)[1].strip()
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
@@ -136,7 +129,6 @@ if prompt := st.chat_input("What is up?"):
                 blog_summary += response.choices[0].delta.get("content", "")
                 message_placeholder.markdown(blog_summary + "▌")
 
-            # update the whole prompt to update token count
             start_prompt_used = blog_summary_prompt + blog_summary
 
             message_placeholder.markdown(blog_summary)  # Display the summary in chat
@@ -145,6 +137,7 @@ if prompt := st.chat_input("What is up?"):
             )
 
     elif prompt.strip().lower().startswith("/rewrite"):
+        # Handle /rewrite command
         input_text = prompt.split(" ", 1)[1].strip()
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
@@ -162,7 +155,6 @@ if prompt := st.chat_input("What is up?"):
                 new_written_text += response.choices[0].delta.get("content", "")
                 message_placeholder.markdown(new_written_text + "▌")
 
-            # update the whole prompt to update token count
             start_prompt_used = rewrite_prompt + new_written_text
 
             message_placeholder.markdown(new_written_text)
@@ -171,6 +163,7 @@ if prompt := st.chat_input("What is up?"):
             )
 
     elif prompt.strip().lower().startswith("/google"):
+        # Handle /google command
         input_query = prompt.split(" ", 1)[1].strip()
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
@@ -228,6 +221,7 @@ if prompt := st.chat_input("What is up?"):
             )
 
     else:
+        # Handle regular user input
         with st.chat_message("user"):
             st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
