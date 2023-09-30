@@ -201,7 +201,6 @@ if prompt := st.chat_input("Let's talk?"):
                     blog_summary += response.choices[0].delta.get("content", "")
 
                 over_all_summary = over_all_summary + blog_summary
-                start_prompt_used = blog_summary_prompt + blog_summary
 
             message_placeholder.markdown(f"Generating Final Search Report...")
 
@@ -216,12 +215,19 @@ if prompt := st.chat_input("Let's talk?"):
                 top_p=top_p,
                 stream=True,
             )
+
             research_final = ""
             for response in response_obj:
                 research_final += response.choices[0].delta.get("content", "")
                 message_placeholder.markdown(research_final + "▌")
 
-            start_prompt_used = start_prompt_used + new_search_prompt + research_final
+            # Update start_prompt_used to include relevant prompts
+            start_prompt_used = (
+                f"Original Query: {input_query}\n" +
+                over_all_summary +
+                new_search_prompt +
+                research_final
+            )
 
             message_placeholder.markdown(research_final + source_links)
             st.session_state.messages.append(
