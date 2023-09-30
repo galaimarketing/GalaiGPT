@@ -18,7 +18,7 @@ def search_google_web_automation(query):
         driver,
         languages=["en-US", "en"],
         vendor="Google Inc.",
-        platform="Win32",
+        platform="Linux",
         webgl_vendor="Intel Inc.",
         renderer="Intel Iris OpenGL Engine",
         fix_hairline=True,
