@@ -1,5 +1,5 @@
 {
-    "api_key": "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",
+    "api_key": "",
     "temperature": 0.1,
     "top_p": 0.54,
     "model": "gpt-3.5-turbo",
