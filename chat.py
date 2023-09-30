@@ -44,8 +44,7 @@ model_default = settings.get("model", "gpt-3.5-turbo")
 # Sidebar settings
 st.sidebar.header("Settings")
 
-show_token_cost = True
-
+show_token_cost = st.sidebar.checkbox("Show Token Cost", show_token_cost_default)
 api_key = st.sidebar.text_input("Secret Key", api_key_default)
 temperature = st.sidebar.slider("Temperature", 0.1, 1.0, temperature_default)
 top_p = st.sidebar.slider("Top P", 0.1, 1.0, top_p_default)
