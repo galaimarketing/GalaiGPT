@@ -46,7 +46,7 @@ st.sidebar.header("Settings")
 
 show_token_cost = True
 
-api_key = st.sidebar.text_input("Secret Key", api_key_default)
+api_key = st.sidebar.text_input("Your Secret Key", api_key_default)
 temperature = st.sidebar.slider("Temperature", 0.1, 1.0, temperature_default)
 top_p = st.sidebar.slider("Top P", 0.1, 1.0, top_p_default)
 model = st.sidebar.selectbox(
