@@ -1,11 +1,6 @@
 import openai
 import streamlit as st
 import json
-from selenium import webdriver
-from selenium_stealth import stealth
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse
-from webdriver_manager.chrome import ChromeDriverManager
 import google_serp
 import prompts
 import blog_posts
