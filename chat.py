@@ -170,9 +170,11 @@ if prompt := st.chat_input("Let's talk?"):
                 {"role": "assistant", "content": new_written_text}
             )
 
-    elif prompt.strip().lower().startswith("/google"):
-        # Handle /google command
-        input_query = prompt.split(" ", 1)[1].strip()
+   elif prompt.strip().lower().startswith("/google"):
+    # Handle /google command
+    parts = prompt.split(" ", 1)
+    if len(parts) > 1:
+        input_query = parts[1].strip()
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             message_placeholder.markdown(
@@ -225,38 +227,10 @@ if prompt := st.chat_input("Let's talk?"):
             st.session_state.messages.append(
                 {"role": "assistant", "content": research_final + source_links}
             )
-
     else:
-        # Handle regular user input
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        st.session_state.messages.append({"role": "user", "content": prompt})
-
+        # Handle the case where there is no query after /google
         with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            full_response = ""
-            response_obj = openai.ChatCompletion.create(
-                model=model,
-                messages=[
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.messages
-                ],
-                stream=True,
-                temperature=temperature,
-                top_p=top_p,
-            )
-
-            for response in response_obj:
-                full_response += response.choices[0].delta.get("content", "")
-                message_placeholder.markdown(full_response + "▌")
-
-            message_placeholder.markdown(full_response)
-
-            start_prompt_used = prompt + full_response
-
-            st.session_state.messages.append(
-                {"role": "assistant", "content": full_response}
-            )
+            st.markdown("Please provide a query after the /google command.")
 
     if show_token_cost:
         total_tokens_used = tokens_count.count_tokens(start_prompt_used, model)
