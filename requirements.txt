@@ -61,7 +61,8 @@ Pillow==10.0.0
 selenium==4.13.0
 selenium-stealth==1.0.6
 tiktoken==0.5.1
-webdriver-manager==3.4.2
+webdriver-manager==3.5.0
+googlesearch-python==1.0.1
 
 
 
