@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import requests
 import os
+import prompts
 
 st.set_page_config(
     page_title="GalaiGPT | BETA",
