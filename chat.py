@@ -1,15 +1,25 @@
 import openai
 import streamlit as st
 import json
-import requests
+import google_serp
 import prompts
+import blog_posts
 import tokens_count
+import os
 
-# Set Streamlit page configuration
+# Set page configuration
 st.set_page_config(
-    page_title="GalaiGPT | BETA",
+    page_title="GalaiGPT",
     page_icon="🤖",
 )
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # Define functions to interact with the JSON file
 def load_settings():
@@ -37,7 +47,7 @@ st.sidebar.header("Settings")
 
 show_token_cost = True
 
-api_key = st.sidebar.text_input("Your Secret Key", api_key_default)
+api_key = st.sidebar.text_input("Secret Key", api_key_default)
 temperature = st.sidebar.slider("Temperature", 0.1, 1.0, temperature_default)
 top_p = st.sidebar.slider("Top P", 0.1, 1.0, top_p_default)
 model = st.sidebar.selectbox(
@@ -58,44 +68,34 @@ settings.update(
 )
 save_settings(settings)
 
-# Initialize cumulative tokens and cost
+# Initialize session state variables
 if "cumulative_tokens" not in st.session_state:
     st.session_state.cumulative_tokens = 0
 if "cumulative_cost" not in st.session_state:
     st.session_state.cumulative_cost = 0
 
-# Main title and description
-st.title("GalaiGPT 🤖")
+st.title("GalaiGPT")
 st.write("Your Personal AI Marketing Assistant, Always Ready to Help 🚀")
 
-# Set the OpenAI API key if it's provided
+# Set the API key if it's provided
 if api_key:
     openai.api_key = api_key
 else:
     st.warning("Please provide a valid Secret Key.")
     st.stop()
 
-# Initialize messages
+# Initialize chat messages
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display existing messages
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# Initialize introduction
-if "introduced" not in st.session_state:
-    st.session_state.introduced = False
-
-# Send the introduction message when the chatbot is first used
-if not st.session_state.introduced:
+# Introduction message
+if not st.session_state.get("introduced", False):
     introduction_message = prompts.introduction_prompt
     st.session_state.messages.append({"role": "assistant", "content": introduction_message})
     st.session_state.introduced = True
 
-# Handle user input
-if prompt := st.chat_input("Let's talk?"):
+# Chat input
+if prompt := st.text_input("You:", key="input"):
     start_prompt_used = ""
 
     # Check for "/reset" command from the user
@@ -103,142 +103,48 @@ if prompt := st.chat_input("Let's talk?"):
         st.session_state.messages = []  # Clear the conversation
         st.session_state.cumulative_tokens = 0  # Reset cumulative tokens
         st.session_state.cumulative_cost = 0  # Reset cumulative cost
-        st.sidebar.markdown(
-            f"**Total Tokens Used This Session:** {st.session_state.cumulative_tokens}"
-        )
-        st.sidebar.markdown(
-            f"**Total Cost This Session:** ${st.session_state.cumulative_cost:.2f}"
-        )
         st.write("Conversation and counters have been reset!")
-        st.stop()  # Halts further execution for this run of the app
 
-    # Handle other user commands (e.g., /summarize, /rewrite, /google)
-    elif prompt.strip().lower().startswith("/summarize"):
-        # Handle /summarize command
-        blog_url = prompt.split(" ", 1)[1].strip()
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            message_placeholder.markdown("Summarizing: " + blog_url)
-            blog_summary_prompt = prompts.blog_summary_prompt(blog_url)
-            response_obj = openai.ChatCompletion.create(
-                model=model,
-                messages=[{"role": "user", "content": blog_summary_prompt}],
-                temperature=temperature,
-                top_p=top_p,
-                stream=True,
-            )
-            blog_summary = ""
-            for response in response_obj:
-                blog_summary += response.choices[0].delta.get("content", "")
-                message_placeholder.markdown(blog_summary + "▌")
+    else:
+        # Handle other user commands and inputs
+        if prompt.strip().lower().startswith("/summarize"):
+            # Handle /summarize command
+            blog_url = prompt.split(" ", 1)[1].strip()
+            blog_summary = blog_posts.get_blog_summary_prompt(blog_url)
+            start_prompt_used = blog_summary
 
-            start_prompt_used = blog_summary_prompt + blog_summary
+        elif prompt.strip().lower().startswith("/rewrite"):
+            # Handle /rewrite command
+            input_text = prompt.split(" ", 1)[1].strip()
+            rewritten_text = prompts.rewrite_prompt.format(text=input_text)
+            start_prompt_used = rewritten_text
 
-            message_placeholder.markdown(blog_summary)  # Display the summary in chat
-            st.session_state.messages.append(
-                {"role": "assistant", "content": blog_summary}
-            )
+        elif prompt.strip().lower().startswith("/google"):
+            # Handle /google command
+            input_query = prompt.split(" ", 1)[1].strip()
+            search_results = google_serp.search_google_web_automation(input_query)
+            start_prompt_used = search_results
 
-    elif prompt.strip().lower().startswith("/rewrite"):
-        # Handle /rewrite command
-        input_text = prompt.split(" ", 1)[1].strip()
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            message_placeholder.markdown("Rewriting...")
-            rewrite_prompt = prompts.rewrite_prompt(input_text)
-            response_obj = openai.ChatCompletion.create(
-                model=model,
-                messages=[{"role": "user", "content": rewrite_prompt}],
-                temperature=temperature,
-                top_p=top_p,
-                stream=True,
-            )
-            new_written_text = ""
-            for response in response_obj:
-                new_written_text += response.choices[0].delta.get("content", "")
-                message_placeholder.markdown(new_written_text + "▌")
-
-            start_prompt_used = rewrite_prompt + new_written_text
-
-            message_placeholder.markdown(new_written_text)
-            st.session_state.messages.append(
-                {"role": "assistant", "content": new_written_text}
-            )
-
-    elif prompt.strip().lower().startswith("/google"):
-        # Handle /google command
-        parts = prompt.split(" ", 1)
-        if len(parts) > 1:
-            input_query = parts[1].strip()
-            with st.chat_message("assistant"):
-                message_placeholder = st.empty()
-                message_placeholder.markdown(
-                    "Searching Google For: " + input_query + " ..."
-                )
-                search_results = prompts.search_google_web_automation(input_query)
-                over_all_summary = ""
-
-                source_links = "\n \n Sources: \n \n"
-
-                for result in search_results:
-                    blog_url = result["url"]
-                    source_links += blog_url + "\n \n"
-                    message_placeholder.markdown(f"Search Done, Reading {blog_url}")
-                    blog_summary_prompt = prompts.blog_summary_prompt(blog_url)
-                    response_obj = openai.ChatCompletion.create(
-                        model=model,
-                        messages=[{"role": "user", "content": blog_summary_prompt}],
-                        temperature=temperature,
-                        top_p=top_p,
-                        stream=True,
-                    )
-
-                    blog_summary = ""
-                    for response in response_obj:
-                        blog_summary += response.choices[0].delta.get("content", "")
-
-                    over_all_summary = over_all_summary + blog_summary
-                    start_prompt_used = blog_summary_prompt + blog_summary
-
-                message_placeholder.markdown(f"Generating Final Search Report...")
-
-                new_search_prompt = prompts.google_search_prompt(over_all_summary)
-
-                response_obj = openai.ChatCompletion.create(
-                    model=model,
-                    messages=[{"role": "user", "content": new_search_prompt}],
-                    temperature=temperature,
-                    top_p=top_p,
-                    stream=True,
-                )
-                research_final = ""
-                for response in response_obj:
-                    research_final += response.choices[0].delta.get("content", "")
-                    message_placeholder.markdown(research_final + "▌")
-
-                start_prompt_used = start_prompt_used + new_search_prompt + research_final
-
-                message_placeholder.markdown(research_final + source_links)
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": research_final + source_links}
-                )
         else:
-            # Handle the case where there is no query after /google
-            with st.chat_message("assistant"):
-                st.markdown("Please provide a query after the /google command.")
+            # Handle regular user input
+            response = prompts.generate_response(prompt, st.session_state.messages)
+            start_prompt_used = response
 
-    if show_token_cost:
-        total_tokens_used = tokens_count.count_tokens(start_prompt_used, model)
-        total_cost = tokens_count.estimate_input_cost_optimized(
-            model, total_tokens_used
-        )
-        st.session_state.cumulative_tokens += total_tokens_used
-        st.session_state.cumulative_cost += total_cost
+        # Display the response
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.session_state.messages.append({"role": "assistant", "content": start_prompt_used})
+        st.text("Assistant:", start_prompt_used)
 
-        # Redisplay the updated cumulative tokens and cost in the left sidebar
-        st.sidebar.markdown(
-            f"**Total Tokens Used This Session:** {st.session_state.cumulative_tokens}"
-        )
-        st.sidebar.markdown(
-            f"**Total Cost This Session:** ${st.session_state.cumulative_cost:.6f}"
-        )
+        if show_token_cost:
+            total_tokens_used = tokens_count.count_tokens(start_prompt_used, model)
+            total_cost = tokens_count.estimate_input_cost_optimized(model, total_tokens_used)
+            st.session_state.cumulative_tokens += total_tokens_used
+            st.session_state.cumulative_cost += total_cost
+
+            # Display the updated cumulative tokens and cost
+            st.sidebar.markdown(
+                f"**Total Tokens Used This Session:** {st.session_state.cumulative_tokens}"
+            )
+            st.sidebar.markdown(
+                f"**Total Cost This Session:** ${st.session_state.cumulative_cost:.6f}"
+            )
