@@ -1,3 +1,4 @@
+import openai
 import streamlit as st
 import json
 import google_serp
@@ -5,13 +6,21 @@ import prompts
 import blog_posts
 import tokens_count
 import os
-import openai 
 
 # Set Streamlit configuration
 st.set_page_config(
     page_title="GalaiGPT | BETA",
     page_icon="🤖",
 )
+
+
+hide_streamlit_style = """
+            <style>
+            [data-testid="stToolbar"] {visibility: hidden !important;}
+            footer {visibility: hidden !important;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # Define functions to interact with the JSON file
 def load_settings():
@@ -29,6 +38,7 @@ def save_settings(settings):
 settings = load_settings()
 
 show_token_cost_default = settings.get("show_token_cost", False)
+api_key_default = settings.get("api_key", "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")
 temperature_default = settings.get("temperature", 0.7)
 top_p_default = settings.get("top_p", 1.0)
 model_default = settings.get("model", "gpt-3.5-turbo")
@@ -38,13 +48,7 @@ st.sidebar.header("Settings")
 
 show_token_cost = True
 
-# Get the API key from user input
-api_key = st.sidebar.text_input("OpenAI API Key", type="password")
-
-if not api_key:
-    st.warning("Please provide a valid Secret Key.")
-    st.stop()
-
+api_key = st.sidebar.text_input("Secret Key", api_key_default)
 temperature = st.sidebar.slider("Temperature", 0.1, 1.0, temperature_default)
 top_p = st.sidebar.slider("Top P", 0.1, 1.0, top_p_default)
 model = st.sidebar.selectbox(
@@ -65,13 +69,13 @@ settings.update(
 )
 save_settings(settings)
 
-# Check if the API key is provided, and set it for the OpenAI client
-if api_key:
-    openai.api_key = api_key
+if "cumulative_tokens" not in st.session_state:
+    st.session_state.cumulative_tokens = 0
+if "cumulative_cost" not in st.session_state:
+    st.session_state.cumulative_cost = 0
 
 st.title("GalaiGPT 🤖")
 st.write(" Your AI-powered marketing assistant! 🎯")
-
 
 # Set the API key if it's provided
 if api_key:
