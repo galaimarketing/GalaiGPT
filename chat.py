@@ -38,10 +38,10 @@ st.sidebar.header("Settings")
 
 show_token_cost = True
 
-# Get the API key from the environment variable
-api_key = os.environ.get("OPENAI_API_KEY")
+# Get the API key from user input
+api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
-if api_key is None:
+if not api_key:
     st.warning("Please provide a valid Secret Key.")
     st.stop()
 
@@ -68,9 +68,6 @@ save_settings(settings)
 # Check if the API key is provided, and set it for the OpenAI client
 if api_key:
     openai.api_key = api_key
-else:
-    st.warning("Please provide a valid Secret Key.")
-    st.stop()
 
 st.title("GalaiGPT 🤖")
 st.write(" Your AI-powered marketing assistant! 🎯")
