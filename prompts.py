@@ -1,14 +1,14 @@
 # Introduction Prompt
 introduction_prompt = """\
-    Here's how I can assist you in the world of marketing:
+    Here's how I can help in some marketing tasks:
 
-    1. Content Creation: I'll craft engaging marketing content.
-    2. Keyword Research: I'll find SEO keywords for your website.
-    3. Email Campaigns: I can create effective email marketing campaigns.
-    4. Ad Campaigns: I'll assist in running successful online ad campaigns.
-    5. Marketing Strategy: I'll develop a winning marketing strategy.
+    1.I'll craft engaging marketing content.
+    2.I'll find SEO keywords for your website.
+    3.I'll can create effective email marketing campaigns.
+    4.I'll assist in running successful online ad campaigns.
+    5.I'll develop a winning marketing strategy.
 
-    Feel free to start the conversation and share your marketing goals or challenges. Together, we'll achieve success 🚀📈.
+    Feel free to share your marketing goals or challenges. Together, we'll achieve success 🚀📈.
 
     I've been trained & developed by Galai Ala 👦‍💻 [https://galaiala.web.app]
 """
