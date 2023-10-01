@@ -46,7 +46,7 @@ model_default = settings.get("model", "gpt-3.5-turbo")
 # Sidebar settings
 st.sidebar.header("Settings")
 
-st.sidebar.markdown("[FIND YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
+st.sidebar.markdown("[FIND YOUR SECRET KEY 🔽](https://platform.openai.com/account/api-keys)")
 
 
 show_token_cost = True
@@ -84,7 +84,7 @@ st.write(" Your AI-powered marketing assistant! 🎯")
 if api_key:
     openai.api_key = api_key
 else:
-    st.warning("Please provide a valid Secret Key.")
+    st.markdown("[FIND YOUR SECRET KEY TO START](https://platform.openai.com/account/api-keys)")
     st.stop()
 
 if "messages" not in st.session_state:
