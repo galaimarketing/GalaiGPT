@@ -38,7 +38,7 @@ def save_settings(settings):
 settings = load_settings()
 
 show_token_cost_default = settings.get("show_token_cost", False)
-api_key_default = settings.get("api_key", "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")
+api_key_default = settings.get("api_key", "")
 temperature_default = settings.get("temperature", 0.7)
 top_p_default = settings.get("top_p", 1.0)
 model_default = settings.get("model", "gpt-3.5-turbo")
