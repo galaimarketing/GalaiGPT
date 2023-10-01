@@ -46,6 +46,9 @@ model_default = settings.get("model", "gpt-3.5-turbo")
 # Sidebar settings
 st.sidebar.header("Settings")
 
+st.sidebar.markdown("[FIND YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
+
+
 show_token_cost = True
 
 api_key = st.sidebar.text_input("Secret Key", api_key_default)
@@ -98,15 +101,15 @@ if "introduced" not in st.session_state:
 if not st.session_state.introduced:
     # Define the introduction message
     introduction_message = """
-    Here's how I can assist you in the world of marketing:
+    Here's how I can help in some marketing tasks:
 
-    1. Content Creation: I'll craft engaging marketing content.
-    2. Keyword Research: I'll find SEO keywords for your website.
-    3. Email Campaigns: I can create effective email marketing campaigns.
-    4. Ad Campaigns: I'll assist in running successful online ad campaigns.
-    5. Marketing Strategy: I'll develop a winning marketing strategy.
+    1.I'll craft engaging marketing content.
+    2.I'll find SEO keywords for your website.
+    3.I'll can create effective email marketing campaigns.
+    4.I'll assist in running successful online ad campaigns.
+    5.I'll develop a winning marketing strategy.
 
-    Feel free to start the conversation and share your marketing goals or challenges. Together, we'll achieve success 🚀📈.
+    Feel free to share your marketing goals or challenges. Together, we'll achieve success 🚀📈.
 
     I've been trained & developed by Galai Ala 👦‍💻 [https://galaiala.web.app]
     """
