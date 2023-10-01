@@ -88,9 +88,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # Introduction message
-if "introduced" not in st.session_state:
-    st.session_state.introduced = False
-
 if not st.session_state.introduced:
     introduction_message = prompts.introduction_prompt
     st.session_state.messages.append({"role": "assistant", "content": introduction_message})
