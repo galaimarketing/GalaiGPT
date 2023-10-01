@@ -5,7 +5,7 @@ annotated-types==0.5.0
 anyio==3.7.1
 async-timeout==4.0.3
 attrs==23.1.0
-beautifulsoup4
+beautifulsoup4==4.9.3
 blinker==1.6.2
 cachetools==5.3.1
 certifi==2023.7.22
@@ -62,4 +62,4 @@ selenium==4.13.0
 selenium-stealth==1.0.6
 tiktoken==0.5.1
 webdriver-manager==3.5.0
-googlesearch-python==1.0.1
+googlesearch-python==1.2.3
