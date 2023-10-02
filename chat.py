@@ -5,6 +5,7 @@ import google_serp
 import prompts
 import blog_posts
 import tokens_count
+import os
 
 # Set Streamlit configuration as the first command
 st.set_page_config(
