@@ -1,18 +1,3 @@
-# Introduction Prompt
-introduction_prompt = """\
-    Here's how I can help in some marketing tasks:
-
-    1.I'll craft engaging marketing content.
-    2.I'll find SEO keywords for your website.
-    3.I'll can create effective email marketing campaigns.
-    4.I'll assist in running successful online ad campaigns.
-    5.I'll develop a winning marketing strategy.
-
-    Feel free to share your marketing goals or challenges. Together, we'll achieve success 🚀📈.
-
-    I've been trained & developed by Galai Ala 👦‍💻 [https://galaiala.web.app]
-"""
-
 # Blog Bullet Summary Prompt
 blog_bullet_summary_prompt = """\
 In the following input, I am going to give you a text you should summarize 
