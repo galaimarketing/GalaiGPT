@@ -7,21 +7,23 @@ import blog_posts
 import tokens_count
 import os
 
-# Read the API key from the Streamlit sidebar input field
-api_key = st.sidebar.text_input("Secret Key", "")
-
-# If the API key is not provided via the sidebar, try to read it from the GitHub secret
-if not api_key:
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-
-# Set OpenAI API key
-openai.api_key = api_key
-
-# Set Streamlit configuration
+# Set Streamlit configuration as the first command
 st.set_page_config(
     page_title="GalaiGPT | BETA",
     page_icon="🤖",
 )
+
+# Read the API key from the Streamlit sidebar input field
+api_key_input = st.sidebar.text_input("Secret Key", "")
+
+# If the API key is not provided via the sidebar, try to read it from the GitHub secret
+if not api_key_input:
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+else:
+    api_key = api_key_input
+
+# Set OpenAI API key
+openai.api_key = api_key
 
 hide_streamlit_style = """
 <style>
@@ -30,12 +32,6 @@ footer {visibility: hidden !important;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-# Sidebar settings
-st.sidebar.header("Settings")
-st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
-
-api_key = st.sidebar.text_input("Secret Key", openai_api_key)
 
 # Define functions to interact with the JSON file
 def load_settings():
