@@ -5,7 +5,6 @@ import google_serp
 import prompts
 import blog_posts
 import tokens_count
-import os
 
 # Set Streamlit configuration as the first command
 st.set_page_config(
@@ -13,11 +12,18 @@ st.set_page_config(
     page_icon="🤖",
 )
 
-# Get the API key from Streamlit Secrets
-api_key = st.secrets["OPENAI_API_KEY"]
+# Initialize OpenAI API key
+api_key = None
 
-# Set OpenAI API key
-openai.api_key = api_key
+# Check if secret key is provided in the sidebar
+st.sidebar.header("Settings")
+st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
+secret_key = st.sidebar.text_input("Enter Secret Key")
+
+# Check if secret key is provided and set OpenAI API key
+if secret_key:
+    api_key = secret_key
+    openai.api_key = api_key
 
 hide_streamlit_style = """
 <style>
@@ -26,8 +32,6 @@ footer {visibility: hidden !important;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-st.sidebar.header("Settings")
-st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
 
 # Define functions to interact with the JSON file
 def load_settings():
@@ -60,8 +64,9 @@ model = st.sidebar.selectbox(
     index=0 if model_default == "gpt-3.5-turbo" else 1,
 )
 
-if not api_key or api_key == "":
-    st.error("Please enter a valid OpenAI API key to use GalaiGPT. 🔑")
+# Check if neither API key nor secret key is provided
+if not (api_key or secret_key):
+    st.error("Please enter a valid OpenAI API key or secret key to use GalaiGPT. 🔑")
     st.markdown("[GET YOURS FROM HERE 😊👍](https://platform.openai.com/account/api-keys)")
     st.stop()
 
