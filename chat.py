@@ -5,9 +5,7 @@ import google_serp
 import prompts
 import blog_posts
 import tokens_count
-from bs4 import BeautifulSoup
-import requests
-import os
+
 
 # Set Streamlit configuration
 st.set_page_config(
