@@ -5,6 +5,7 @@ import google_serp
 import prompts
 import blog_posts
 import tokens_count
+import os
 
 
 # Set Streamlit configuration
@@ -21,6 +22,17 @@ footer {visibility: hidden !important;}
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
+# Define a function to set the API key from environment variable
+def set_api_key():
+    return os.environ.get("OPENAI_API_KEY")
+
+# Set the API key if it's provided
+api_key = set_api_key()
+if not api_key:
+    st.error("Before starting, please enter a valid OpenAI API key. 🔑")
+    st.markdown("[GET YOURS FROM HERE 👍](https://platform.openai.com/account/api-keys)")
+    st.stop()  # Stop further execution
+    
 # Define functions to interact with the JSON file
 def load_settings():
     try:
@@ -37,7 +49,7 @@ def save_settings(settings):
 settings = load_settings()
 
 show_token_cost_default = settings.get("show_token_cost", False)
-api_key_default = settings.get("api_key", "")
+api_key_default = settings.get("api_key", "Enter your API Key here")
 temperature_default = settings.get("temperature", 0.7)
 top_p_default = settings.get("top_p", 1.0)
 model_default = settings.get("model", "gpt-3.5-turbo")
