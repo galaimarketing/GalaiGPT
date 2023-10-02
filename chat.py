@@ -5,7 +5,6 @@ import google_serp
 import prompts
 import blog_posts
 import tokens_count
-import os
 
 # Set Streamlit configuration as the first command
 st.set_page_config(
@@ -118,20 +117,23 @@ if prompt := st.chat_input("Ask me anything about marketing"):
                 message_placeholder = st.empty()
                 message_placeholder.markdown("Summarizing: " + blog_url)
                 blog_summary_prompt = blog_posts.get_blog_summary_prompt(blog_url)
-                response_obj = openai.ChatCompletion.create(
-                    model=model,
-                    messages=[{"role": "user", "content": blog_summary_prompt}],
-                    temperature=temperature,
-                    top_p=top_p,
-                    stream=True,
-                )
-                blog_summary = ""
-                for response in response_obj:
-                    blog_summary += response.choices[0].delta.get("content", "")
-                    message_placeholder.markdown(blog_summary + "▌")
-                start_prompt_used = blog_summary_prompt + blog_summary
-                message_placeholder.markdown(blog_summary)  # Display the summary in chat
-                chat_messages.append({"role": "assistant", "content": blog_summary})
+                try:
+                    response_obj = openai.ChatCompletion.create(
+                        model=model,
+                        messages=[{"role": "user", "content": blog_summary_prompt}],
+                        temperature=temperature,
+                        top_p=top_p,
+                        stream=True,
+                    )
+                    blog_summary = ""
+                    for response in response_obj:
+                        blog_summary += response.choices[0].delta.get("content", "")
+                        message_placeholder.markdown(blog_summary + "▌")
+                    start_prompt_used = blog_summary_prompt + blog_summary
+                    message_placeholder.markdown(blog_summary)  # Display the summary in chat
+                    chat_messages.append({"role": "assistant", "content": blog_summary})
+                except openai.error.AuthenticationError as e:
+                    st.error("Authentication failed. Please check your API key and try again.")
 
         elif prompt.strip().lower().startswith("/rewrite"):
             # Handle /rewrite command
@@ -140,20 +142,23 @@ if prompt := st.chat_input("Ask me anything about marketing"):
                 message_placeholder = st.empty()
                 message_placeholder.markdown("Rewriting...")
                 rewrite_prompt = prompts.rewrite_prompt(input_text)
-                response_obj = openai.ChatCompletion.create(
-                    model=model,
-                    messages=[{"role": "user", "content": rewrite_prompt}],
-                    temperature=temperature,
-                    top_p=top_p,
-                    stream=True,
-                )
-                new_written_text = ""
-                for response in response_obj:
-                    new_written_text += response.choices[0].delta.get("content", "")
-                    message_placeholder.markdown(new_written_text + "▌")
-                start_prompt_used = rewrite_prompt + new_written_text
-                message_placeholder.markdown(new_written_text)
-                chat_messages.append({"role": "assistant", "content": new_written_text})
+                try:
+                    response_obj = openai.ChatCompletion.create(
+                        model=model,
+                        messages=[{"role": "user", "content": rewrite_prompt}],
+                        temperature=temperature,
+                        top_p=top_p,
+                        stream=True,
+                    )
+                    new_written_text = ""
+                    for response in response_obj:
+                        new_written_text += response.choices[0].delta.get("content", "")
+                        message_placeholder.markdown(new_written_text + "▌")
+                    start_prompt_used = rewrite_prompt + new_written_text
+                    message_placeholder.markdown(new_written_text)
+                    chat_messages.append({"role": "assistant", "content": new_written_text})
+                except openai.error.AuthenticationError as e:
+                    st.error("Authentication failed. Please check your API key and try again.")
 
         elif prompt.strip().lower().startswith("/google"):
             # Handle /google command
@@ -171,34 +176,40 @@ if prompt := st.chat_input("Ask me anything about marketing"):
                     source_links += blog_url + "\n \n"
                     message_placeholder.markdown(f"Search Done, Reading {blog_url}")
                     blog_summary_prompt = blog_posts.get_blog_summary_prompt(blog_url)
+                    try:
+                        response_obj = openai.ChatCompletion.create(
+                            model=model,
+                            messages=[{"role": "user", "content": blog_summary_prompt}],
+                            temperature=temperature,
+                            top_p=top_p,
+                            stream=True,
+                        )
+                        blog_summary = ""
+                        for response in response_obj:
+                            blog_summary += response.choices[0].delta.get("content", "")
+                        over_all_summary = over_all_summary + blog_summary
+                        start_prompt_used = blog_summary_prompt + blog_summary
+                    except openai.error.AuthenticationError as e:
+                        st.error("Authentication failed. Please check your API key and try again.")
+                message_placeholder.markdown(f"Generating Final Search Report...")
+                new_search_prompt = prompts.google_search_prompt(over_all_summary)
+                try:
                     response_obj = openai.ChatCompletion.create(
                         model=model,
-                        messages=[{"role": "user", "content": blog_summary_prompt}],
+                        messages=[{"role": "user", "content": new_search_prompt}],
                         temperature=temperature,
                         top_p=top_p,
                         stream=True,
                     )
-                    blog_summary = ""
+                    research_final = ""
                     for response in response_obj:
-                        blog_summary += response.choices[0].delta.get("content", "")
-                    over_all_summary = over_all_summary + blog_summary
-                    start_prompt_used = blog_summary_prompt + blog_summary
-                message_placeholder.markdown(f"Generating Final Search Report...")
-                new_search_prompt = prompts.google_search_prompt(over_all_summary)
-                response_obj = openai.ChatCompletion.create(
-                    model=model,
-                    messages=[{"role": "user", "content": new_search_prompt}],
-                    temperature=temperature,
-                    top_p=top_p,
-                    stream=True,
-                )
-                research_final = ""
-                for response in response_obj:
-                    research_final += response.choices[0].delta.get("content", "")
-                    message_placeholder.markdown(research_final + "▌")
-                start_prompt_used = start_prompt_used + new_search_prompt + research_final
-                message_placeholder.markdown(research_final + source_links)
-                chat_messages.append({"role": "assistant", "content": research_final + source_links})
+                        research_final += response.choices[0].delta.get("content", "")
+                        message_placeholder.markdown(research_final + "▌")
+                    start_prompt_used = start_prompt_used + new_search_prompt + research_final
+                    message_placeholder.markdown(research_final + source_links)
+                    chat_messages.append({"role": "assistant", "content": research_final + source_links})
+                except openai.error.AuthenticationError as e:
+                    st.error("Authentication failed. Please check your API key and try again.")
 
         else:
             # Handle regular user input
@@ -209,20 +220,22 @@ if prompt := st.chat_input("Ask me anything about marketing"):
             with st.chat_message("assistant"):
                 message_placeholder = st.empty()
                 message_placeholder.markdown("GalaiGPT")
-                # Send the user input to OpenAI and get a response
-                response = openai.ChatCompletion.create(
-                    model=model,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": "You are a helpful and professional marketing assistant named GalaiGPT. You are capable of excelling in various tasks, including crafting engaging content ideas for social media platforms, writing compelling descriptions for products or services, writing effective ad copies, providing guidance on running successful ad campaigns, and developing winning marketing strategies. Your answers depend on the user needs. You reply in a human-friendly way.",
-                        },
-                        {"role": "user", "content": prompt},
-                    ],
-                )
-                # Get the generated response from OpenAI
-                ai_message = response.choices[0].message["content"].strip()
-                st.write(ai_message)
+                try:
+                    response = openai.ChatCompletion.create(
+                        model=model,
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": "You are a helpful and professional marketing assistant named GalaiGPT. You are capable of excelling in various tasks, including crafting engaging content ideas for social media platforms, writing compelling descriptions for products or services, writing effective ad copies, providing guidance on running successful ad campaigns, and developing winning marketing strategies. Your answers depend on the user needs. You reply in a human-friendly way.",
+                            },
+                            {"role": "user", "content": prompt},
+                        ],
+                    )
+                    # Get the generated response from OpenAI
+                    ai_message = response.choices[0].message["content"].strip()
+                    st.write(ai_message)
+                except openai.error.AuthenticationError as e:
+                    st.error("Authentication failed. Please check your API key and try again.")
 
             if show_token_cost:
                 total_tokens_used = tokens_count.count_tokens(start_prompt_used, model)
