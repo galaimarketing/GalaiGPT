@@ -39,7 +39,7 @@ st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/a
 
 # Set the API key if it's provided
 api_key = set_api_key()
-api_key_default = "" if not api_key else api_key
+api_key_default = "" if not api_key else openai_api_key
 
 # If API key is not provided or set to default, allow the user to input it
 api_key = st.sidebar.text_input("Secret Key", api_key_default)
@@ -75,7 +75,7 @@ model = st.sidebar.selectbox(
     index=0 if model_default == "gpt-3.5-turbo" else 1,
 )
 
-if not api_key or api_key == "Enter your API Key here":
+if not api_key or openai_api_key == "":
     st.error("Please enter a valid OpenAI API key to use GalaiGPT. 🔑")
     st.markdown("[GET YOURS FROM HERE 😊👍](https://platform.openai.com/account/api-keys)")
     st.stop()
