@@ -97,7 +97,7 @@ for message in chat_messages:
 
 
 # Handle user input
-if prompt := st.chat_input("Chat With Me"):
+if prompt := st.chat_input("Ask me anything about marketing"):
     start_prompt_used = ""
 
     # Check for "/reset" command from the user
