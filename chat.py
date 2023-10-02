@@ -12,18 +12,17 @@ st.set_page_config(
     page_icon="🤖",
 )
 
-# Initialize OpenAI API key
-api_key = None
-
-# Check if secret key is provided in the sidebar
-st.sidebar.header("Settings")
-st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
-secret_key = st.sidebar.text_input("Enter Secret Key Here ↓")
+api_key = st.secrets.get("OPENAI_API_KEY")
 
 # Check if secret key is provided and set OpenAI API key
 if secret_key:
     api_key = secret_key
     openai.api_key = api_key
+
+# Check if secret key is provided in the sidebar
+st.sidebar.header("Settings")
+st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
+secret_key = st.sidebar.text_input("Enter Secret Key Here ↓")
 
 hide_streamlit_style = """
 <style>
