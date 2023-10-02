@@ -6,7 +6,14 @@ import prompts
 import blog_posts
 import tokens_count
 import os
+import decouple
+from decouple import config
 
+# Load API key from environment variable
+openai_api_key = config('OPENAI_API_KEY')
+
+# Set OpenAI API key
+openai.api_key = openai_api_key
 
 # Set Streamlit configuration
 st.set_page_config(
@@ -26,13 +33,17 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 def set_api_key():
     return os.environ.get("OPENAI_API_KEY")
 
+# Sidebar settings
+st.sidebar.header("Settings")
+st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
+
 # Set the API key if it's provided
 api_key = set_api_key()
-if not api_key:
-    st.error("Before starting, please enter a valid OpenAI API key. 🔑")
-    st.markdown("[GET YOURS FROM HERE 👍](https://platform.openai.com/account/api-keys)")
-    st.stop()  # Stop further execution
-    
+api_key_default = "" if not api_key else api_key
+
+# If API key is not provided or set to default, allow the user to input it
+api_key = st.sidebar.text_input("Secret Key", api_key_default)
+
 # Define functions to interact with the JSON file
 def load_settings():
     try:
@@ -49,19 +60,13 @@ def save_settings(settings):
 settings = load_settings()
 
 show_token_cost_default = settings.get("show_token_cost", False)
-api_key_default = settings.get("api_key", "Enter your API Key here")
 temperature_default = settings.get("temperature", 0.7)
 top_p_default = settings.get("top_p", 1.0)
 model_default = settings.get("model", "gpt-3.5-turbo")
 
-# Sidebar settings
-st.sidebar.header("Settings")
-
-st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
-
 show_token_cost = True
 
-api_key = st.sidebar.text_input("Secret Key", api_key_default)
+# Initialize temperature and other variables before the API key check
 temperature = st.sidebar.slider("Temperature", 0.1, 1.0, temperature_default)
 top_p = st.sidebar.slider("Top P", 0.1, 1.0, top_p_default)
 model = st.sidebar.selectbox(
@@ -70,11 +75,16 @@ model = st.sidebar.selectbox(
     index=0 if model_default == "gpt-3.5-turbo" else 1,
 )
 
+if not api_key or api_key == "Enter your API Key here":
+    st.error("Please enter a valid OpenAI API key to use GalaiGPT. 🔑")
+    st.markdown("[GET YOURS FROM HERE 😊👍](https://platform.openai.com/account/api-keys)")
+    st.stop()
+
 # Update settings with the new values
 settings.update(
     {
-        "show_token_cost": show_token_cost,
         "api_key": api_key,
+        "show_token_cost": show_token_cost,
         "temperature": temperature,
         "top_p": top_p,
         "model": model,
@@ -88,14 +98,6 @@ if "cumulative_tokens" not in st.session_state:
 if "cumulative_cost" not in st.session_state:
     st.session_state.cumulative_cost = 0
 
-# Set the API key if it's provided
-if not api_key:
-    st.error("Before starting, please enter a valid OpenAI API key. 🔑")
-    st.markdown("[GET YOURS FROM HERE 👍](https://platform.openai.com/account/api-keys)")
-    st.stop()  # Stop further execution
-
-# Continue with the rest of your code if the API key is provided
-
 st.title("GalaiGPT 🤖")
 st.write("Hello there! I'm GalaiGPT, Your AI-powered Marketing Assistant! 🎯 Think of me as your go-to resource for all things marketing-related. From inspiring you with content ideas for social media to strategizing effective ad campaigns, I'm here to assist you in every step along the way. 😊 Say Thanks to [Galai Ala](https://galaiala.web.app) Who Trained Me! 👦‍💻")
 
@@ -106,7 +108,6 @@ chat_messages = []
 for message in chat_messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-
 
 # Handle user input
 if prompt := st.chat_input("Ask me anything about marketing"):
@@ -231,7 +232,7 @@ if prompt := st.chat_input("Ask me anything about marketing"):
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are a helpful and professional marketing assistant named GalaiGPT. You are capable of excelling in various tasks, including crafting engaging content ideas for social media platforms, writing compelling descriptions for products or services, writing effective ad copies, providing guidance on running successful ad campaigns, and developing winning marketing strategies. Your answers depend on the user needs. You reply in human friendly way.",
+                            "content": "You are a helpful and professional marketing assistant named GalaiGPT. You are capable of excelling in various tasks, including crafting engaging content ideas for social media platforms, writing compelling descriptions for products or services, writing effective ad copies, providing guidance on running successful ad campaigns, and developing winning marketing strategies. Your answers depend on the user needs. You reply in a human-friendly way.",
                         },
                         {"role": "user", "content": prompt},
                     ],
@@ -256,5 +257,4 @@ if prompt := st.chat_input("Ask me anything about marketing"):
                     f"**Total Cost This Session:** ${st.session_state.cumulative_cost:.6f}"
                 )
 
-# Store chat_messages in st.session_state to preserve it across reruns
 st.session_state.chat_messages = chat_messages
