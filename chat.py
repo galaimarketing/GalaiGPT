@@ -64,7 +64,7 @@ model = st.sidebar.selectbox(
     index=0 if model_default == "gpt-3.5-turbo" else 1,
 )
 
-if not api_key or openai_api_key == "":
+if not api_key or api_key == "":  # Fix the variable name here
     st.error("Please enter a valid OpenAI API key to use GalaiGPT. 🔑")
     st.markdown("[GET YOURS FROM HERE 😊👍](https://platform.openai.com/account/api-keys)")
     st.stop()
