@@ -8,7 +8,7 @@ import tokens_count
 import os
 
 # Load API key from environment variable
-openai_api_key = st.secrets['OPENAI_API_KEY']
+openai_api_key = os.environ.get("OPENAI_API_KEY", "")
 
 # Set OpenAI API key
 openai.api_key = openai_api_key
@@ -27,20 +27,11 @@ footer {visibility: hidden !important;}
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# Define a function to set the API key from environment variable
-def set_api_key():
-    return os.environ.get("OPENAI_API_KEY")
-
 # Sidebar settings
 st.sidebar.header("Settings")
 st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
 
-# Set the API key if it's provided
-api_key = set_api_key()
-api_key_default = "" if not api_key else openai_api_key
-
-# If API key is not provided or set to default, allow the user to input it
-api_key = st.sidebar.text_input("Secret Key", api_key_default)
+api_key = st.sidebar.text_input("Secret Key", openai_api_key)
 
 # Define functions to interact with the JSON file
 def load_settings():
