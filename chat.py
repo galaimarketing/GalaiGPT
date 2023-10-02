@@ -7,11 +7,15 @@ import blog_posts
 import tokens_count
 import os
 
-# Load API key from environment variable
-openai_api_key = os.environ.get("OPENAI_API_KEY", "")
+# Read the API key from the Streamlit sidebar input field
+api_key = st.sidebar.text_input("Secret Key", "")
+
+# If the API key is not provided via the sidebar, try to read it from the GitHub secret
+if not api_key:
+    api_key = os.environ.get("OPENAI_API_KEY", "")
 
 # Set OpenAI API key
-openai.api_key = openai_api_key
+openai.api_key = api_key
 
 # Set Streamlit configuration
 st.set_page_config(
