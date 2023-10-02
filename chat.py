@@ -26,6 +26,8 @@ footer {visibility: hidden !important;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.sidebar.header("Settings")
+st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
 
 # Define functions to interact with the JSON file
 def load_settings():
