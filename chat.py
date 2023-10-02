@@ -6,11 +6,9 @@ import prompts
 import blog_posts
 import tokens_count
 import os
-import decouple
-from decouple import config
 
 # Load API key from environment variable
-openai_api_key = config('OPENAI_API_KEY')
+openai_api_key = st.secrets['OPENAI_API_KEY']
 
 # Set OpenAI API key
 openai.api_key = openai_api_key
