@@ -18,7 +18,7 @@ api_key = None
 # Check if secret key is provided in the sidebar
 st.sidebar.header("Settings")
 st.sidebar.markdown("[GET YOUR SECRET KEY](https://platform.openai.com/account/api-keys)")
-secret_key = st.sidebar.text_input("Enter Secret Key")
+secret_key = st.sidebar.text_input("Enter Secret Key Here ↓")
 
 # Check if secret key is provided and set OpenAI API key
 if secret_key:
