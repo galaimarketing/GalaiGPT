@@ -13,14 +13,8 @@ st.set_page_config(
     page_icon="🤖",
 )
 
-# Read the API key from the Streamlit sidebar input field
-api_key_input = st.sidebar.text_input("Your Secret Key Here ↓", "")
-
-# If the API key is not provided via the sidebar, try to read it from the GitHub secret
-if not api_key_input:
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-else:
-    api_key = api_key_input
+# Get the API key from Streamlit Secrets
+api_key = st.secrets["OPENAI_API_KEY"]
 
 # Set OpenAI API key
 openai.api_key = api_key
