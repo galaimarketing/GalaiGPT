@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # Read the API key from the Streamlit sidebar input field
-api_key_input = st.sidebar.text_input("Secret Key", "")
+api_key_input = st.sidebar.text_input("Your Secret Key Here ↓", "")
 
 # If the API key is not provided via the sidebar, try to read it from the GitHub secret
 if not api_key_input:
@@ -64,7 +64,7 @@ model = st.sidebar.selectbox(
     index=0 if model_default == "gpt-3.5-turbo" else 1,
 )
 
-if not api_key or api_key == "":  # Fix the variable name here
+if not api_key or api_key == "":
     st.error("Please enter a valid OpenAI API key to use GalaiGPT. 🔑")
     st.markdown("[GET YOURS FROM HERE 😊👍](https://platform.openai.com/account/api-keys)")
     st.stop()
