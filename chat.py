@@ -71,13 +71,15 @@ if "cumulative_cost" not in st.session_state:
 st.title("GalaiGPT 🤖")
 st.write("Hello there! I'm GalaiGPT, Your AI-powered Marketing Assistant! 🎯 Think of me as your go-to resource for all things marketing-related. From inspiring you with content ideas for social media to strategizing effective ad campaigns, I'm here to assist you in every step along the way. 😊 Say Thanks to [Galai Ala](https://galaiala.web.app) Who Trained Me! 👦‍💻")
 
-# Set the API key if it's provided
-if api_key:
-    openai.api_key = api_key
-elif secret_key:
-    openai.api_key = secret_key
-else:
-    st.warning("Please provide a valid OpenAI API Key. 🔑")
+    # Set the API key if it's provided
+    if api_key:
+        openai.api_key = api_key
+    elif secret_key:
+        openai.api_key = secret_key
+    else:
+        raise ValueError("Please provide a valid OpenAI API Key. 🔑")
+except ValueError as e:
+    st.warning(str(e))
     st.markdown("[GET YOURS FROM HERE 😊👍](https://platform.openai.com/account/api-keys)")
     st.stop()
 
