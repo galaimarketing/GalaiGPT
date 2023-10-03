@@ -1,9 +1,6 @@
 import openai
 import streamlit as st
 import json
-import google_serp
-import prompts
-import blog_posts
 import tokens_count
 
 # Set Streamlit configuration as the first command
@@ -30,6 +27,9 @@ if not (api_key or secret_key):
     st.error("Please enter a valid OpenAI API key or secret key to use GalaiGPT. 🔑")
     st.markdown("[GET YOURS FROM HERE 😊👍](https://platform.openai.com/account/api-keys)")
     st.stop()
+
+# Initialize the chat history
+chat_history = []
 
 # Define functions to interact with the JSON file
 def load_settings():
@@ -86,18 +86,13 @@ st.write("Hello there! I'm GalaiGPT, Your AI-powered Marketing Assistant! 🎯 T
 # Store chat messages in a list
 chat_messages = []
 
-# Display chat messages
-for message in chat_messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
 # Handle user input
-if prompt := st.chat_input("Ask me anything about marketing"):
+if prompt := st.text_input("Ask me anything about marketing"):
     start_prompt_used = ""
 
     # Check for "/reset" command from the user
     if prompt.strip().lower() == "/reset":
-        chat_messages = []  # Clear the conversation
+        chat_history = []  # Clear the conversation history
         st.session_state.cumulative_tokens = 0  # Reset cumulative tokens
         st.session_state.cumulative_cost = 0  # Reset cumulative cost
         st.sidebar.markdown(
@@ -109,148 +104,39 @@ if prompt := st.chat_input("Ask me anything about marketing"):
         st.write("Conversation and counters have been reset!")
         st.stop()  # Halts further execution for this run of the app
     else:
-        # Handle other user commands (e.g., /summarize, /rewrite, /google)
-        if prompt.strip().lower().startswith("/summarize"):
-            # Handle /summarize command
-            blog_url = prompt.split(" ", 1)[1].strip()
-            with st.chat_message("assistant"):
-                message_placeholder = st.empty()
-                message_placeholder.markdown("Summarizing: " + blog_url)
-                blog_summary_prompt = blog_posts.get_blog_summary_prompt(blog_url)
-                try:
-                    response_obj = openai.ChatCompletion.create(
-                        model=model,
-                        messages=[{"role": "user", "content": blog_summary_prompt}],
-                        temperature=temperature,
-                        top_p=top_p,
-                        stream=True,
-                    )
-                    blog_summary = ""
-                    for response in response_obj:
-                        blog_summary += response.choices[0].delta.get("content", "")
-                        message_placeholder.markdown(blog_summary + "▌")
-                    start_prompt_used = blog_summary_prompt + blog_summary
-                    message_placeholder.markdown(blog_summary)  # Display the summary in chat
-                    chat_messages.append({"role": "assistant", "content": blog_summary})
-                except openai.error.AuthenticationError as e:
-                    st.error("Authentication failed. Please check your API key and try again.")
+        # Append the user's message to the chat history
+        chat_history.append({"role": "user", "content": prompt})
 
-        elif prompt.strip().lower().startswith("/rewrite"):
-            # Handle /rewrite command
-            input_text = prompt.split(" ", 1)[1].strip()
-            with st.chat_message("assistant"):
-                message_placeholder = st.empty()
-                message_placeholder.markdown("Rewriting...")
-                rewrite_prompt = prompts.rewrite_prompt(input_text)
-                try:
-                    response_obj = openai.ChatCompletion.create(
-                        model=model,
-                        messages=[{"role": "user", "content": rewrite_prompt}],
-                        temperature=temperature,
-                        top_p=top_p,
-                        stream=True,
-                    )
-                    new_written_text = ""
-                    for response in response_obj:
-                        new_written_text += response.choices[0].delta.get("content", "")
-                        message_placeholder.markdown(new_written_text + "▌")
-                    start_prompt_used = rewrite_prompt + new_written_text
-                    message_placeholder.markdown(new_written_text)
-                    chat_messages.append({"role": "assistant", "content": new_written_text})
-                except openai.error.AuthenticationError as e:
-                    st.error("Authentication failed. Please check your API key and try again.")
+        try:
+            # Include the entire chat history in the input messages
+            messages = [{"role": message["role"], "content": message["content"]} for message in chat_history]
+            response = openai.ChatCompletion.create(
+                model=model,
+                messages=messages,
+            )
+            # Get the generated response from OpenAI
+            ai_message = response.choices[0].message["content"].strip()
 
-        elif prompt.strip().lower().startswith("/google"):
-            # Handle /google command
-            input_query = prompt.split(" ", 1)[1].strip()
-            with st.chat_message("assistant"):
-                message_placeholder = st.empty()
-                message_placeholder.markdown(
-                    "Searching Google For: " + input_query + " ..."
-                )
-                search_results = google_serp.search_google_web_automation(input_query)
-                over_all_summary = ""
-                source_links = "\n \n Sources: \n \n"
-                for result in search_results:
-                    blog_url = result["url"]
-                    source_links += blog_url + "\n \n"
-                    message_placeholder.markdown(f"Search Done, Reading {blog_url}")
-                    blog_summary_prompt = blog_posts.get_blog_summary_prompt(blog_url)
-                    try:
-                        response_obj = openai.ChatCompletion.create(
-                            model=model,
-                            messages=[{"role": "user", "content": blog_summary_prompt}],
-                            temperature=temperature,
-                            top_p=top_p,
-                            stream=True,
-                        )
-                        blog_summary = ""
-                        for response in response_obj:
-                            blog_summary += response.choices[0].delta.get("content", "")
-                        over_all_summary = over_all_summary + blog_summary
-                        start_prompt_used = blog_summary_prompt + blog_summary
-                    except openai.error.AuthenticationError as e:
-                        st.error("Authentication failed. Please check your API key and try again.")
-                message_placeholder.markdown(f"Generating Final Search Report...")
-                new_search_prompt = prompts.google_search_prompt(over_all_summary)
-                try:
-                    response_obj = openai.ChatCompletion.create(
-                        model=model,
-                        messages=[{"role": "user", "content": new_search_prompt}],
-                        temperature=temperature,
-                        top_p=top_p,
-                        stream=True,
-                    )
-                    research_final = ""
-                    for response in response_obj:
-                        research_final += response.choices[0].delta.get("content", "")
-                        message_placeholder.markdown(research_final + "▌")
-                    start_prompt_used = start_prompt_used + new_search_prompt + research_final
-                    message_placeholder.markdown(research_final + source_links)
-                    chat_messages.append({"role": "assistant", "content": research_final + source_links})
-                except openai.error.AuthenticationError as e:
-                    st.error("Authentication failed. Please check your API key and try again.")
+            # Append the assistant's message to the chat history
+            chat_history.append({"role": "assistant", "content": ai_message})
 
-        else:
-            # Handle regular user input
-            with st.chat_message("user"):
-                st.markdown(prompt)
-            chat_messages.append({"role": "user", "content": prompt})
+            st.write(ai_message)
+        except openai.error.AuthenticationError as e:
+            st.error("Authentication failed. Please check your API key and try again.")
 
-            with st.chat_message("assistant"):
-                message_placeholder = st.empty()
-                message_placeholder.markdown("GalaiGPT")
-                try:
-                    response = openai.ChatCompletion.create(
-                        model=model,
-                        messages=[
-                            {
-                                "role": "system",
-                                "content": "You are a helpful and professional marketing assistant named GalaiGPT. You are capable of excelling in various tasks, including crafting engaging content ideas for social media platforms, writing compelling descriptions for products or services, writing effective ad copies, providing guidance on running successful ad campaigns, and developing winning marketing strategies. Your answers depend on the user needs. You reply in a human-friendly way.",
-                            },
-                            {"role": "user", "content": prompt},
-                        ],
-                    )
-                    # Get the generated response from OpenAI
-                    ai_message = response.choices[0].message["content"].strip()
-                    st.write(ai_message)
-                except openai.error.AuthenticationError as e:
-                    st.error("Authentication failed. Please check your API key and try again.")
+        if show_token_cost:
+            # Calculate token usage and cost based on the entire conversation history
+            total_tokens_used = tokens_count.count_tokens(" ".join([message["content"] for message in chat_history]), model)
+            total_cost = tokens_count.estimate_input_cost_optimized(
+                model, total_tokens_used
+            )
+            st.session_state.cumulative_tokens += total_tokens_used
+            st.session_state.cumulative_cost += total_cost
 
-            if show_token_cost:
-                total_tokens_used = tokens_count.count_tokens(start_prompt_used, model)
-                total_cost = tokens_count.estimate_input_cost_optimized(
-                    model, total_tokens_used
-                )
-                st.session_state.cumulative_tokens += total_tokens_used
-                st.session_state.cumulative_cost += total_cost
-
-                # Redisplay the updated cumulative tokens and cost in the left sidebar
-                st.sidebar.markdown(
-                    f"**Total Tokens Used This Session:** {st.session_state.cumulative_tokens}"
-                )
-                st.sidebar.markdown(
-                    f"**Total Cost This Session:** ${st.session_state.cumulative_cost:.6f}"
-                )
-
-st.session_state.chat_messages = chat_messages
+            # Redisplay the updated cumulative tokens and cost in the left sidebar
+            st.sidebar.markdown(
+                f"**Total Tokens Used This Session:** {st.session_state.cumulative_tokens}"
+            )
+            st.sidebar.markdown(
+                f"**Total Cost This Session:** ${st.session_state.cumulative_cost:.6f}"
+            )
