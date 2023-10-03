@@ -7,6 +7,11 @@ import blog_posts
 import tokens_count
 import os
 
+# Set Streamlit configuration as the first command
+st.set_page_config(
+    page_title="GalaiGPT | BETA",
+    page_icon="🤖",
+)
 # Get the API key from Streamlit Secrets
 secret_key = st.secrets.get("OPENAI_API_KEY")
 # Define functions to interact with the JSON file
